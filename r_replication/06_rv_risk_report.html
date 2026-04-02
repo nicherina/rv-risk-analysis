@@ -2991,9 +2991,9 @@ lessor absorbs the difference.</p>
 </blockquote>
 <p>This analysis uses a dataset of <strong>538,704 vehicle sales
 records</strong> to build and validate a depreciation model. Risk
-classification and stress testing are then applied to a
-<strong>lease-realistic portfolio</strong> — vehicles aged under 5 years
-with a 40% guaranteed buyback — comprising ~120,000 contracts.</p>
+classification and stress testing are then applied to a <strong>lower
+age-band portfolio</strong> — vehicles aged 12 years or under with a 40%
+guaranteed buyback — comprising ~267,000 contracts.</p>
 <p><strong>Three headline findings:</strong></p>
 <table>
 <colgroup>
@@ -3009,7 +3009,7 @@ with a 40% guaranteed buyback — comprising ~120,000 contracts.</p>
 <tbody>
 <tr class="odd">
 <td>Age is the primary risk driver</td>
-<td>Each additional year reduces market value by 13.3%; vehicles 4–5
+<td>Each additional year reduces market value by 13.3%; vehicles 9–12
 years old already show material RV gaps</td>
 </tr>
 <tr class="even">
@@ -3096,10 +3096,10 @@ Total contracts (after cleaning)
 </tr>
 <tr>
 <td style="text-align:left;">
-Contracts in lease portfolio (age &lt; 5 yrs)
+Contracts in lower age-band portfolio (age ≤ 12 yrs)
 </td>
 <td style="text-align:right;">
-0
+267,386
 </td>
 </tr>
 <tr>
@@ -3107,7 +3107,7 @@ Contracts in lease portfolio (age &lt; 5 yrs)
 Mean vehicle age (portfolio)
 </td>
 <td style="text-align:right;">
-NaN years
+11 years
 </td>
 </tr>
 <tr>
@@ -3115,7 +3115,7 @@ NaN years
 Mean selling price
 </td>
 <td style="text-align:right;">
-€NaN
+€17,826
 </td>
 </tr>
 <tr>
@@ -3123,7 +3123,7 @@ Mean selling price
 Mean estimated new price
 </td>
 <td style="text-align:right;">
-€NaN
+€59,964
 </td>
 </tr>
 <tr>
@@ -3131,7 +3131,7 @@ Mean estimated new price
 Mean guaranteed RV (40% of new)
 </td>
 <td style="text-align:right;">
-€NaN
+€23,985
 </td>
 </tr>
 <tr>
@@ -3139,7 +3139,7 @@ Mean guaranteed RV (40% of new)
 Total portfolio exposure
 </td>
 <td style="text-align:right;">
-€0.00 billion
+€6.41 billion
 </td>
 </tr>
 </tbody>
@@ -3376,8 +3376,8 @@ Classification</h1>
 \text{Guaranteed Buyback Price}\]</span></p>
 <p>The <strong>RV gap</strong> (guaranteed minus market) is the direct
 financial exposure per contract. Contracts are classified into four
-tiers. The analysis below applies to the <strong>lease-realistic
-portfolio</strong> (vehicles aged &lt; 5 years) with a recalibrated
+tiers. The analysis below applies to the <strong>lower age-band
+portfolio</strong> (vehicles aged ≤ 12 years) with a recalibrated
 guarantee of <strong>40% of estimated new price</strong>:</p>
 <table class="table table-striped table-hover table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <thead>
@@ -3396,30 +3396,52 @@ Share
 <tbody>
 <tr>
 <td style="text-align:left;">
-NA
+Critical
 </td>
 <td style="text-align:right;">
-NA
+128,177
 </td>
 <td style="text-align:right;">
-NA
+47.9%
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-:———
+High
 </td>
 <td style="text-align:right;">
-—–:
+52,834
 </td>
 <td style="text-align:right;">
-—–:
+19.8%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Medium
+</td>
+<td style="text-align:right;">
+32,760
+</td>
+<td style="text-align:right;">
+12.3%
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Low
+</td>
+<td style="text-align:right;">
+53,615
+</td>
+<td style="text-align:right;">
+20.1%
 </td>
 </tr>
 </tbody>
 </table>
 <blockquote>
-<p><strong>NaN% of the portfolio sits in the Critical tier</strong> —
+<p><strong>47.9% of the portfolio sits in the Critical tier</strong> —
 even with a recalibrated 40% guarantee and a portfolio filtered to
 vehicles under 5 years old, structural RV shortfalls persist.</p>
 </blockquote>

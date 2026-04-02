@@ -42,13 +42,13 @@ theme_set(theme_minimal(base_size = 13))
 > When a lease contract ends, the lessor guarantees the lessee can return the vehicle at a pre-agreed price.
 > If the car's market value has fallen below that price — the lessor absorbs the difference.
 
-This analysis uses a dataset of **538,704 vehicle sales records** to build and validate a depreciation model. Risk classification and stress testing are then applied to a **lease-realistic portfolio** — vehicles aged under 5 years with a 40% guaranteed buyback — comprising `r if(exists("rs")) format(nrow(rs), big.mark=",") else "~120,000"` contracts.
+This analysis uses a dataset of **538,704 vehicle sales records** to build and validate a depreciation model. Risk classification and stress testing are then applied to a **lower age-band portfolio** — vehicles aged 12 years or under with a 40% guaranteed buyback — comprising `r if(exists("rs")) format(nrow(rs), big.mark=",") else "~267,000"` contracts.
 
 **Three headline findings:**
 
 | Finding | Detail |
 |---|---|
-| Age is the primary risk driver | Each additional year reduces market value by 13.3%; vehicles 4–5 years old already show material RV gaps |
+| Age is the primary risk driver | Each additional year reduces market value by 13.3%; vehicles 9–12 years old already show material RV gaps |
 | EVs carry a structural discount | EVs trade at a ~30% discount to equivalent ICE vehicles — directly eroding RV adequacy for any EV-heavy book |
 | Portfolio stress is a base-case event | Expected loss exceeds €7.4M per 500-contract fleet across all 10,000 simulations — this is not a tail risk |
 ---
@@ -90,7 +90,7 @@ df <- read_csv("data/vehicles_clean.csv")
 # Load risk-scored data; filter to realistic lease portfolio (age < 5 yrs)
 # Recalibrate guaranteed RV to 40% of estimated new price for older fleet mixes
 rs <- read_csv("data/vehicles_risk_scored.csv") %>%
-  filter(vehicle_age < 5) %>%
+  filter(vehicle_age <= 12) %>%
   mutate(
     guaranteed_rv      = 0.40 * estimated_new_price,
     rv_gap             = guaranteed_rv - expected_market_rv,
@@ -105,7 +105,7 @@ rs <- read_csv("data/vehicles_risk_scored.csv") %>%
 
 tibble(
   Metric = c("Total contracts (after cleaning)",
-             "Contracts in lease portfolio (age < 5 yrs)",
+             "Contracts in lower age-band portfolio (age ≤ 12 yrs)",
              "Mean vehicle age (portfolio)",
              "Mean selling price",
              "Mean estimated new price",
@@ -217,7 +217,7 @@ A contract is **at risk** when:
 
 $$\text{Predicted Market Value} < \text{Guaranteed Buyback Price}$$
 
-The **RV gap** (guaranteed minus market) is the direct financial exposure per contract. Contracts are classified into four tiers. The analysis below applies to the **lease-realistic portfolio** (vehicles aged < 5 years) with a recalibrated guarantee of **40% of estimated new price**:
+The **RV gap** (guaranteed minus market) is the direct financial exposure per contract. Contracts are classified into four tiers. The analysis below applies to the **lower age-band portfolio** (vehicles aged ≤ 12 years) with a recalibrated guarantee of **40% of estimated new price**:
 
 ```{r risk_tier_table}
 tier_order <- c("Critical", "High", "Medium", "Low")
