@@ -48,7 +48,7 @@ This analysis examines **538,704 vehicle contracts** from a representative leasi
 |---|---|
 | Age drives risk | Vehicles aged 7+ years are at risk in >90% of scenarios |
 | EVs carry extra uncertainty | EVs trade at a ~30% discount to equivalent ICE vehicles — amplifying RV shortfalls |
-| Systemic exposure | 80% of the portfolio falls in the "Critical" risk tier; expected loss exceeds €7.4M per 500-contract fleet |
+| Systemic exposure | Majority of the portfolio falls in the "Critical" risk tier even after recalibrating guarantees to 40% and filtering to vehicles under 5 years old |
 
 ---
 
@@ -86,17 +86,38 @@ The analysis uses a real-world vehicle sales dataset sourced from US market list
 ```{r data_summary}
 df <- read_csv("data/vehicles_clean.csv")
 
+# Load risk-scored data; filter to realistic lease portfolio (age < 5 yrs)
+# Recalibrate guaranteed RV to 40% of estimated new price for older fleet mixes
+rs <- read_csv("data/vehicles_risk_scored.csv") %>%
+  filter(vehicle_age < 5) %>%
+  mutate(
+    guaranteed_rv      = 0.40 * estimated_new_price,
+    rv_gap             = guaranteed_rv - expected_market_rv,
+    at_risk            = rv_gap > 0,
+    risk_tier          = case_when(
+      rv_gap <= 0          ~ "Low",
+      rv_gap <= 2000       ~ "Medium",
+      rv_gap <= 5000       ~ "High",
+      TRUE                 ~ "Critical"
+    )
+  )
+
 tibble(
-  Metric = c("Total contracts (after cleaning)", "Mean vehicle age",
-             "Mean selling price", "Mean estimated new price",
-             "Mean guaranteed RV (50% of new)", "Total portfolio exposure"),
+  Metric = c("Total contracts (after cleaning)",
+             "Contracts in lease portfolio (age < 5 yrs)",
+             "Mean vehicle age (portfolio)",
+             "Mean selling price",
+             "Mean estimated new price",
+             "Mean guaranteed RV (40% of new)",
+             "Total portfolio exposure"),
   Value = c(
     format(nrow(df), big.mark = ","),
-    paste0(round(mean(df$vehicle_age, na.rm = TRUE), 1), " years"),
-    paste0("€", format(round(mean(df$price, na.rm = TRUE)), big.mark = ",")),
-    "€56,583",
-    "€28,292",
-    "€7.66 billion"
+    format(nrow(rs), big.mark = ","),
+    paste0(round(mean(rs$vehicle_age, na.rm = TRUE), 1), " years"),
+    paste0("€", format(round(mean(df$selling_price, na.rm = TRUE)), big.mark = ",")),
+    paste0("€", format(round(mean(rs$estimated_new_price, na.rm = TRUE)), big.mark = ",")),
+    paste0("€", format(round(mean(rs$guaranteed_rv, na.rm = TRUE)), big.mark = ",")),
+    paste0("€", format(round(sum(rs$guaranteed_rv, na.rm = TRUE) / 1e9, 2), nsmall = 2), " billion")
   )
 ) %>%
   kable(align = c("l","r")) %>%
@@ -195,16 +216,32 @@ A contract is **at risk** when:
 
 $$\text{Predicted Market Value} < \text{Guaranteed Buyback Price}$$
 
-The **RV gap** (guaranteed minus market) is the direct financial exposure per contract. Contracts are classified into four tiers:
+The **RV gap** (guaranteed minus market) is the direct financial exposure per contract. Contracts are classified into four tiers. The analysis below applies to the **lease-realistic portfolio** (vehicles aged < 5 years) with a recalibrated guarantee of **40% of estimated new price**:
 
-| Risk Tier | Definition | Count | Share |
-|---|---|---|---|
-| **Critical** | Large negative gap, high probability of loss | 377,920 | 80.2% |
-| **High** | Moderate gap, likely loss | 52,317 | 11.1% |
-| **Medium** | Small gap, possible loss | 20,405 | 4.3% |
-| **Low** | Market value ≥ guaranteed RV | 20,696 | 4.4% |
+```{r risk_tier_table}
+tier_order <- c("Critical", "High", "Medium", "Low")
 
-> **80% of the portfolio sits in the Critical tier** — this is not isolated exposure; it reflects a structural mismatch between historical guarantee levels and current market realities.
+tier_summary <- rs %>%
+  count(risk_tier) %>%
+  mutate(
+    risk_tier = factor(risk_tier, levels = tier_order),
+    Share     = paste0(round(n / sum(n) * 100, 1), "%"),
+    n         = format(n, big.mark = ",")
+  ) %>%
+  arrange(risk_tier) %>%
+  rename(`Risk Tier` = risk_tier, Count = n)
+
+pct_critical <- rs %>%
+  summarise(p = mean(risk_tier == "Critical") * 100) %>%
+  pull(p) %>% round(1)
+
+tier_summary %>%
+  kable(align = c("l","r","r")) %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                full_width = FALSE)
+```
+
+> **`r pct_critical`% of the portfolio sits in the Critical tier** — even with a recalibrated 40% guarantee and a portfolio filtered to vehicles under 5 years old, structural RV shortfalls persist.
 
 ## Confidence Bands Around Residual Value
 
