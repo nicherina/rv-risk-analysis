@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Rscript -e \"install.packages\\(c\\('tidyverse', 'scales', 'knitr', 'kableExtra'\\), repos='https://cran.rstudio.com/'\\)\")",
+      "Bash(\"/c/Program Files/R/R-4.4.2/bin/Rscript\" -e \"install.packages\\(c\\('tidyverse', 'scales', 'knitr', 'kableExtra'\\), repos='https://cran.rstudio.com/'\\)\")",
+      "Bash(\"/c/Program Files/R/R-4.4.2/bin/Rscript\" -e \"rmarkdown::render\\('c:/Users/IdeaPad/OneDrive/Desktop/LALALAL/Risk Project/rv_risk_project/r_replication/06_rv_risk_report.Rmd'\\)\")"
+    ]
+  }
+}

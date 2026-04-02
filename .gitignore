@@ -1,0 +1,21 @@
+# R
+renv/library/
+.Rproj.user/
+*.knit.md
+*.utf8.md
+**/*_cache/
+**/*_files/
+
+# Python
+__pycache__/
+*.pyc
+.env
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large data files
+data/*.csv
+data/*.parquet

@@ -1,0 +1,205 @@
+---
+title: "Residual Value Risk — R Replication"
+author: "Nisrina Walyadin"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Overview
+
+This notebook replicates the core depreciation model and key visualisations
+from the Python analysis in R, demonstrating cross-tool flexibility.
+
+```{r install, eval=FALSE}
+# Run once
+#install.packages(c("tidyverse", "broom", "scales", "ggridges", "viridis"))
+```
+
+```{r libraries}
+library(tidyverse)
+library(broom)
+library(scales)
+library(viridis)
+
+theme_set(theme_minimal(base_size = 13))
+```
+
+## 1. Load Data
+
+```{r load}
+# Load the cleaned dataset produced by Python notebook 01
+df <- read_csv("data/vehicles_clean.csv")
+
+cat("Rows:", nrow(df), "\n")
+cat("Columns:", ncol(df), "\n")
+glimpse(df)
+```
+
+## 2. Depreciation Model (OLS)
+
+```{r model}
+# Log-linear OLS — mirrors the Python statsmodels specification
+model_formula <- log_price ~ vehicle_age + log_odometer + is_ev
+
+# Add brand if available
+if ("brand" %in% colnames(df)) {
+  # Keep top 15 brands
+  top_brands <- df %>%
+    count(brand, sort = TRUE) %>%
+    slice_head(n = 15) %>%
+    pull(brand)
+
+  df_model <- df %>%
+    filter(brand %in% top_brands) %>%
+    drop_na(log_price, vehicle_age, log_odometer, is_ev, brand)
+
+  model_formula <- log_price ~ vehicle_age + log_odometer + is_ev + brand
+} else {
+  df_model <- df %>%
+    drop_na(log_price, vehicle_age, log_odometer, is_ev)
+}
+
+ols_model <- lm(model_formula, data = df_model)
+
+# Clean coefficient table
+tidy(ols_model) %>%
+  filter(p.value < 0.05) %>%
+  mutate(
+    estimate   = round(estimate, 4),
+    std.error  = round(std.error, 4),
+    p.value    = scales::pvalue(p.value)
+  ) %>%
+  print()
+
+cat("\nR-squared:", round(summary(ols_model)$r.squared, 3))
+cat("\nAdj R-squared:", round(summary(ols_model)$adj.r.squared, 3), "\n")
+```
+
+```{r interpret}
+coefs <- coef(ols_model)
+
+age_effect <- (exp(coefs["vehicle_age"]) - 1) * 100
+ev_effect  <- (exp(coefs["is_ev"]) - 1) * 100
+
+cat(sprintf("Age effect: each additional year → %+.1f%% change in price\n", age_effect))
+cat(sprintf("EV premium/discount vs ICE: %+.1f%%\n", ev_effect))
+```
+
+## 3. Visualisations
+
+### 3a. Depreciation Curve by Fuel Type
+
+```{r plot_depreciation, fig.width=11, fig.height=6}
+df_model <- df_model %>%
+  mutate(
+    price_actual = exp(log_price),
+    fuel_label   = if_else(is_ev == 1, "EV", "ICE")
+  )
+
+# Median price by age and fuel type
+age_summary <- df_model %>%
+  group_by(vehicle_age, fuel_label) %>%
+  summarise(median_price = median(price_actual), .groups = "drop")
+
+ggplot(age_summary, aes(x = vehicle_age, y = median_price, color = fuel_label)) +
+  geom_line(linewidth = 1.8) +
+  geom_point(size = 3) +
+  scale_y_continuous(labels = label_dollar(prefix = "€", suffix = "k",
+                                            scale = 1/1000, accuracy = 1)) +
+  scale_color_manual(values = c("EV" = "#2E86AB", "ICE" = "#E84855")) +
+  labs(
+    title    = "Residual Value by Vehicle Age & Fuel Type",
+    subtitle = "Median market price — EV vs ICE depreciation curves",
+    x        = "Vehicle Age (years)",
+    y        = "Median Market Price",
+    color    = "Fuel Type"
+  ) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(color = "grey50"),
+    legend.position = "top"
+  )
+
+ggsave("outputs/R_01_depreciation_curve.png", width = 11, height = 6, dpi = 150)
+cat("💾 Saved: outputs/R_01_depreciation_curve.png\n")
+```
+
+### 3b. Predicted vs Actual
+
+```{r plot_pred_actual, fig.width=8, fig.height=8}
+df_model$price_pred <- exp(predict(ols_model, df_model))
+
+# Sample for readability
+sample_df <- df_model %>% sample_n(min(4000, nrow(df_model)))
+
+ggplot(sample_df, aes(x = price_actual, y = price_pred)) +
+  geom_point(alpha = 0.15, size = 1, color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, color = "red",
+              linetype = "dashed", linewidth = 1.2) +
+  scale_x_continuous(labels = label_dollar(prefix = "€", suffix = "k",
+                                            scale = 1/1000, accuracy = 1)) +
+  scale_y_continuous(labels = label_dollar(prefix = "€", suffix = "k",
+                                            scale = 1/1000, accuracy = 1)) +
+  labs(
+    title    = "Predicted vs Actual Market Value",
+    subtitle = "OLS log-linear model — red dashed line = perfect prediction",
+    x        = "Actual Price",
+    y        = "Predicted Price"
+  ) +
+  theme(plot.title = element_text(face = "bold", size = 14))
+
+ggsave("outputs/R_02_predicted_vs_actual.png", width = 8, height = 8, dpi = 150)
+cat("💾 Saved: outputs/R_02_predicted_vs_actual.png\n")
+```
+
+### 3c. Risk Exposure by Age Band
+
+```{r plot_risk, fig.width=11, fig.height=6}
+df_risk <- df_model %>%
+  mutate(
+    guaranteed_rv  = exp(log_price) / 0.85 / (0.90 ^ pmax(vehicle_age - 1, 0)) * 0.50,
+    at_risk        = price_actual < guaranteed_rv,
+    risk_exposure  = pmax(guaranteed_rv - price_actual, 0),
+    age_band       = cut(vehicle_age,
+                         breaks = c(0, 2, 4, 6, 10, Inf),
+                         labels = c("0–2 yrs", "3–4 yrs", "5–6 yrs",
+                                    "7–10 yrs", "10+ yrs"),
+                         right  = TRUE)
+  )
+
+risk_summary <- df_risk %>%
+  group_by(age_band, fuel_label) %>%
+  summarise(
+    pct_at_risk      = mean(at_risk, na.rm = TRUE) * 100,
+    avg_exposure     = mean(risk_exposure, na.rm = TRUE),
+    .groups          = "drop"
+  )
+
+ggplot(risk_summary, aes(x = age_band, y = pct_at_risk, fill = fuel_label)) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%", pct_at_risk)),
+            position = position_dodge(width = 0.7),
+            vjust = -0.4, size = 3.5) +
+  scale_fill_manual(values = c("EV" = "#2E86AB", "ICE" = "#E84855")) +
+  scale_y_continuous(labels = function(x) paste0(x, "%"), expand = expansion(mult = c(0, 0.1))) +
+  labs(
+    title    = "% Contracts at Residual Value Risk by Age Band & Fuel Type",
+    subtitle = "At risk = predicted market value < guaranteed buyback price (50% of new)",
+    x        = "Vehicle Age Band",
+    y        = "% Contracts at Risk",
+    fill     = "Fuel Type"
+  ) +
+  theme(
+    plot.title      = element_text(face = "bold", size = 13),
+    plot.subtitle   = element_text(color = "grey50"),
+    legend.position = "top"
+  )
+
+ggsave("outputs/R_03_risk_by_age_band.png", width = 11, height = 6, dpi = 150)
+cat("💾 Saved: outputs/R_03_risk_by_age_band.png\n")
+cat("\n✅ R replication complete — all outputs saved to outputs/\n")
+```
