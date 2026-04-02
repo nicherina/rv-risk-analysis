@@ -2989,10 +2989,11 @@ lessor guarantees the lessee can return the vehicle at a pre-agreed
 price. If the car’s market value has fallen below that price — the
 lessor absorbs the difference.</p>
 </blockquote>
-<p>This analysis examines <strong>538,704 vehicle contracts</strong>
-from a representative leasing portfolio, building a depreciation model,
-classifying risk tiers, and stress-testing the portfolio against adverse
-market scenarios.</p>
+<p>This analysis uses a dataset of <strong>538,704 vehicle sales
+records</strong> to build and validate a depreciation model. Risk
+classification and stress testing are then applied to a
+<strong>lease-realistic portfolio</strong> — vehicles aged under 5 years
+with a 40% guaranteed buyback — comprising ~120,000 contracts.</p>
 <p><strong>Three headline findings:</strong></p>
 <table>
 <colgroup>
@@ -3007,19 +3008,19 @@ market scenarios.</p>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Age drives risk</td>
-<td>Vehicles aged 7+ years are at risk in &gt;90% of scenarios</td>
+<td>Age is the primary risk driver</td>
+<td>Each additional year reduces market value by 13.3%; vehicles 4–5
+years old already show material RV gaps</td>
 </tr>
 <tr class="even">
-<td>EVs carry extra uncertainty</td>
-<td>EVs trade at a ~30% discount to equivalent ICE vehicles — amplifying
-RV shortfalls</td>
+<td>EVs carry a structural discount</td>
+<td>EVs trade at a ~30% discount to equivalent ICE vehicles — directly
+eroding RV adequacy for any EV-heavy book</td>
 </tr>
 <tr class="odd">
-<td>Systemic exposure</td>
-<td>Majority of the portfolio falls in the “Critical” risk tier even
-after recalibrating guarantees to 40% and filtering to vehicles under 5
-years old</td>
+<td>Portfolio stress is a base-case event</td>
+<td>Expected loss exceeds €7.4M per 500-contract fleet across all 10,000
+simulations — this is not a tail risk</td>
 </tr>
 </tbody>
 </table>
@@ -3114,7 +3115,7 @@ NaN years
 Mean selling price
 </td>
 <td style="text-align:right;">
-€14,077
+€NaN
 </td>
 </tr>
 <tr>

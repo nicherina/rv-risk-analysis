@@ -20,7 +20,9 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
                       fig.align = "center")
-#knitr::opts_knit$set(root.dir = getwd())
+if (!file.exists("data/vehicles_clean.csv")) {
+  knitr::opts_knit$set(root.dir = normalizePath("../"))
+}
 ```
 
 ```{r libraries, include=FALSE}
@@ -40,16 +42,15 @@ theme_set(theme_minimal(base_size = 13))
 > When a lease contract ends, the lessor guarantees the lessee can return the vehicle at a pre-agreed price.
 > If the car's market value has fallen below that price — the lessor absorbs the difference.
 
-This analysis examines **538,704 vehicle contracts** from a representative leasing portfolio, building a depreciation model, classifying risk tiers, and stress-testing the portfolio against adverse market scenarios.
+This analysis uses a dataset of **538,704 vehicle sales records** to build and validate a depreciation model. Risk classification and stress testing are then applied to a **lease-realistic portfolio** — vehicles aged under 5 years with a 40% guaranteed buyback — comprising `r if(exists("rs")) format(nrow(rs), big.mark=",") else "~120,000"` contracts.
 
 **Three headline findings:**
 
 | Finding | Detail |
 |---|---|
-| Age drives risk | Vehicles aged 7+ years are at risk in >90% of scenarios |
-| EVs carry extra uncertainty | EVs trade at a ~30% discount to equivalent ICE vehicles — amplifying RV shortfalls |
-| Systemic exposure | Majority of the portfolio falls in the "Critical" risk tier even after recalibrating guarantees to 40% and filtering to vehicles under 5 years old |
-
+| Age is the primary risk driver | Each additional year reduces market value by 13.3%; vehicles 4–5 years old already show material RV gaps |
+| EVs carry a structural discount | EVs trade at a ~30% discount to equivalent ICE vehicles — directly eroding RV adequacy for any EV-heavy book |
+| Portfolio stress is a base-case event | Expected loss exceeds €7.4M per 500-contract fleet across all 10,000 simulations — this is not a tail risk |
 ---
 
 # Business Context — Why Does This Matter?
@@ -114,7 +115,7 @@ tibble(
     format(nrow(df), big.mark = ","),
     format(nrow(rs), big.mark = ","),
     paste0(round(mean(rs$vehicle_age, na.rm = TRUE), 1), " years"),
-    paste0("€", format(round(mean(df$selling_price, na.rm = TRUE)), big.mark = ",")),
+    paste0("€", format(round(mean(rs$price_actual, na.rm = TRUE)), big.mark = ",")),
     paste0("€", format(round(mean(rs$estimated_new_price, na.rm = TRUE)), big.mark = ",")),
     paste0("€", format(round(mean(rs$guaranteed_rv, na.rm = TRUE)), big.mark = ",")),
     paste0("€", format(round(sum(rs$guaranteed_rv, na.rm = TRUE) / 1e9, 2), nsmall = 2), " billion")
