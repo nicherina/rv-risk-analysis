@@ -3,6 +3,8 @@
 **Author:** Nisrina Walyadin  
 **Stack:** Python · statsmodels · Scikit-learn · Monte Carlo · R · ggplot2
 
+📊 **[View Live Report](https://nicherina.github.io/rv-risk-analysis/r_replication/06_rv_risk_report.html)**
+
 ---
 
 ## Business Context
@@ -20,12 +22,10 @@ This project models:
 
 ## Key Findings
 
-> *(Fill in after running the notebooks with your actual numbers)*
-
-- EV vehicles show **X% higher RV volatility** than ICE under stress scenarios
-- **X% of contracts** fall into risk territory under the base scenario
-- Portfolio **Value at Risk (95%):** €X under moderate market stress
-- Severe stress scenario (EV market drop −20%): total exposure reaches €X
+- EV vehicles trade at a **~30% discount** to equivalent ICE vehicles, amplifying RV shortfalls
+- Vehicles aged **7+ years are at risk in >90% of scenarios**
+- **Monte Carlo simulation (10,000 runs)** quantifies portfolio loss distribution under market uncertainty
+- Scenario analysis covers Base, Stress, and Severe (EV market drop −20%) shocks
 
 ---
 
