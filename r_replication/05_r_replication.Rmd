@@ -161,7 +161,7 @@ cat("💾 Saved: outputs/R_02_predicted_vs_actual.png\n")
 ```{r plot_risk, fig.width=11, fig.height=6}
 df_risk <- df_model %>%
   mutate(
-    guaranteed_rv  = exp(log_price) / 0.85 / (0.90 ^ pmax(vehicle_age - 1, 0)) * 0.50,
+    guaranteed_rv  = exp(log_price) / 0.85 / (0.90 ^ pmax(vehicle_age - 1, 0)) * 0.40,
     at_risk        = price_actual < guaranteed_rv,
     risk_exposure  = pmax(guaranteed_rv - price_actual, 0),
     age_band       = cut(vehicle_age,
@@ -188,7 +188,7 @@ ggplot(risk_summary, aes(x = age_band, y = pct_at_risk, fill = fuel_label)) +
   scale_y_continuous(labels = function(x) paste0(x, "%"), expand = expansion(mult = c(0, 0.1))) +
   labs(
     title    = "% Contracts at Residual Value Risk by Age Band & Fuel Type",
-    subtitle = "At risk = predicted market value < guaranteed buyback price (50% of new)",
+    subtitle = "At risk = predicted market value < guaranteed buyback price (40% of new)",
     x        = "Vehicle Age Band",
     y        = "% Contracts at Risk",
     fill     = "Fuel Type"
